@@ -48,7 +48,7 @@ fn main() -> Result<(), csv::Error>{
         130
     );
 
-    let res = test1(&otani, 10_000_000);
+    let res = test1(&otani, 50_000_000);
     let csv_file = "ohtani_expected_run.csv";
     let mut wtr = csv::Writer::from_path(csv_file)?;
     for row in res.0 {
