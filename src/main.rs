@@ -48,7 +48,7 @@ fn main() -> Result<(), csv::Error>{
         130
     );
 
-    let res = test1(&otani, 100_000_000);
+    let res = test1(&otani, 10_000_000);
     let csv_file = "ohtani_expected_run.csv";
     let mut wtr = csv::Writer::from_path(csv_file)?;
     for row in res.0 {
@@ -57,7 +57,7 @@ fn main() -> Result<(), csv::Error>{
     wtr.flush()?;
 
 
-    let csv_file = "ohtani_variance_of_run.csv";
+    let csv_file = "ohtani_stdev_of_run.csv";
     let mut wtr = csv::Writer::from_path(csv_file)?;
     for row in res.1 {
         wtr.serialize(row)?;
@@ -101,7 +101,7 @@ fn test1(player: &Player, n_iter: i32) -> ([[f64; 3]; 8], [[f64; 3]; 8]) {
                     }).sum::<f64>() / (n_iter as f64 - 1.0) - mu * mu;
 
                     player_er[r][c] = mu;
-                    player_er_std[r][c] = variance;
+                    player_er_std[r][c] = variance.sqrt();
                 }
             }
         }
