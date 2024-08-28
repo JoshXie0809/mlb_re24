@@ -35,7 +35,7 @@ const ER: [[f64; 3]; 8] = [
     [2.2618, 1.5383, 0.7018],
 ];
 
-fn main() {
+fn main() -> Result<(), csv::Error>{
     let otani = Player::new(
         511, 
         150, 
@@ -48,15 +48,35 @@ fn main() {
         130
     );
 
-    let mut otani_er: [[f64; 3]; 8] = ER.clone();
+    let res = test1(&otani, 10_000_000);
+    let csv_file = "ohtani_expected_run.csv";
+    let mut wtr = csv::Writer::from_path(csv_file)?;
+    for row in res {
+        wtr.serialize(row)?;
+    }
+    wtr.flush()?;
+
+    Ok(())
+}
+
+
+fn test1(player: &Player, n_iter: i32) -> [[f64; 3]; 8] {
+    let mut player_er: [[f64; 3]; 8] = ER.clone();
 
     for one_base in [false, true] {
         for two_base in [false, true] {
             for three_base in [false, true] {
                 for out in [0, 1, 2] {
-                    let n_iter = 10_000_000;
 
-                    let weights: [i32; 9] = otani.stat();
+                    let r = 
+                        1 * one_base as i32 + 
+                        2 * two_base as i32  + 
+                        4 * three_base as i32;
+
+                    let c = out;
+                    let (r, c) = (r as usize, c as usize);
+
+                    let weights: [i32; 9] = player.stat();
                     let dist = WeightedIndex::new(weights).unwrap();
                     
                     let res = (1..n_iter).into_par_iter().map(|_| {
@@ -67,26 +87,17 @@ fn main() {
 
                     let mu = res.iter().sum::<f64>() / n_iter as f64;
                     // standard deviation^2
-                    let variance = res.iter().map(|val| {
+                    let _variance = res.iter().map(|val| {
                         val * val
                     }).sum::<f64>() / (n_iter as f64 - 1.0) - mu * mu;
 
-                    if one_base {print!("1 ")} else {print!("x ")};
-                    if two_base {print!("2 ")} else {print!("x ")};
-                    if three_base {print!("3 ")} else {print!("x ")};
-                    println!("- {out} out");
-                    
-
-                    println!("mu  :{}",  mu);
-                    println!("var :{}",  variance);
-                    println!();
+                    player_er[r][c] = mu;
                 }
             }
         }
     }
 
-    
-
+    player_er
 }
 
 
@@ -178,7 +189,6 @@ pub enum HitResult {
 }
 
 #[derive(Debug)]
-#[derive(Clone, Copy)]
 pub struct BaseSituation {
     pub one_base: bool,
     pub two_base: bool,
